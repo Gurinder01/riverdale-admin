@@ -1,0 +1,73 @@
+{% extends 'studyingstatus/base.html' %}
+
+{% block content %}
+{{ block.super }}
+<div class="container">
+    <h1>Studying Status Report Generator</h1>
+    <form id="uploadForm" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" id="fileInput" name="file" accept=".xlsx">
+        <button type="button" id="uploadButton" class="btn">Upload Excel File</button>
+    </form>
+    <button id="downloadButton" class="btn" disabled>Download Processed File</button>
+    <div id="loading" class="loading hidden"></div>
+</div>
+
+<script>
+var csrftoken = '{{ csrf_token }}';
+document.getElementById('uploadButton').addEventListener('click', function() {
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert('Please select a file first!');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Unhide the loading div
+    const loadingDiv = document.getElementById('loading');
+    loadingDiv.classList.remove('hidden');
+
+    const downloadbtn = document.getElementById('downloadButton');
+    downloadbtn.disabled = true;
+
+    // Adjust the URL to your Django server's upload endpoint
+    fetch('/upload/', { // Assuming you're hosting at the root
+        method: 'POST',
+        body: formData,
+        headers: {
+        "X-CSRFToken": csrftoken
+        },
+        credentials: 'include' // Necessary if your site is on a different domain
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Success:', data);
+        if (data.filename) {
+            // Enable the download button; no need to attach the filename to it
+            const downloadButton = document.getElementById('downloadButton');
+            downloadButton.disabled = false;
+            alert('File uploaded and processed successfully!');
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+        alert('There was an error processing your file.');
+    }).finally(() => {
+        // Hide the loading div again
+        loadingDiv.classList.add('hidden');
+    });
+});
+
+document.getElementById('downloadButton').addEventListener('click', function() {
+    // Adjust the URL to your Django server's download endpoint
+    // Since the filename is stored in the session, we no longer need to append the filename to the URL
+    const url = `/download/`; // Adjusted to reflect backend changes
+    window.location.href = url;
+});
+
+</script>
+{% endblock %}
