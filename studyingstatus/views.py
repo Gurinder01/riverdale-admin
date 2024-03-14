@@ -1,7 +1,6 @@
 import os
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.shortcuts import render, redirect
-from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from .forms import UploadFileForm
 from .utils import generate_studying_status
